@@ -10,6 +10,10 @@ import { cn, pad } from "@/lib/utils"
 
 const SIZES = "(max-width: 420px) 76vw, (min-width: 1700px) 1080px, 62vw"
 
+/** Dónde va la marca: sobre los dos píxeles de abajo de la pestaña elegida, a su ancho. */
+const markAt = (tab: HTMLElement) =>
+  `translate(${tab.offsetLeft}px, ${tab.offsetTop + tab.offsetHeight - 2}px) scaleX(${tab.offsetWidth})`
+
 /**
  * Trabajo. Un proyecto a la vez y, de cada uno, su baraja de capturas. Aquí la
  * baraja comparte la página: arriba y abajo sigue siendo scroll; las capturas
@@ -44,7 +48,8 @@ export function Portfolio() {
     return () => window.removeEventListener(PROJECT_EVENT, listener)
   }, [])
 
-  // La marca bajo la pestaña elegida. Se mueve con transform (en la GPU), nunca con left o width.
+  // La marca bajo la pestaña elegida, sobre su línea (en el celular hay dos filas). Se mueve con
+  // transform (en la GPU), nunca con left, top o width.
   const activeRef = React.useRef(active)
   React.useLayoutEffect(() => {
     activeRef.current = active
@@ -52,7 +57,7 @@ export function Portfolio() {
     const tab = tabs.current[active]
     if (!mark || !tab) return
     mark.style.transition = instant.current ? "none" : ""
-    mark.style.transform = `translateX(${tab.offsetLeft}px) scaleX(${tab.offsetWidth})`
+    mark.style.transform = markAt(tab)
     mark.style.opacity = "1"
     instant.current = false
   }, [active])
@@ -71,7 +76,7 @@ export function Portfolio() {
       const tab = tabs.current[activeRef.current]
       if (!tab) return
       mark.style.transition = "none"
-      mark.style.transform = `translateX(${tab.offsetLeft}px) scaleX(${tab.offsetWidth})`
+      mark.style.transform = markAt(tab)
     })
     ro.observe(list)
     return () => ro.disconnect()
@@ -96,7 +101,7 @@ export function Portfolio() {
           crumb="trabajo"
           titleId="trabajo-title"
           title="Páginas que resuelven algo."
-          intro="Dos proyectos recientes, en producción. Pasa las capturas de lado, con un clic o con las flechas."
+          intro="Cuatro proyectos recientes, en producción. Pasa las capturas de lado, con un clic o con las flechas."
           aside
         />
 
@@ -104,7 +109,7 @@ export function Portfolio() {
           ref={listRef}
           role="tablist"
           aria-label="Proyectos"
-          className="relative mt-14 grid grid-cols-2 border-b border-line md:mt-20"
+          className="relative mt-14 grid grid-cols-2 gap-y-6 md:mt-20 lg:grid-cols-4"
         >
           {projects.map((p, i) => {
             const selected = i === active
@@ -123,7 +128,7 @@ export function Portfolio() {
                 onClick={() => select(i)}
                 onKeyDown={(e) => onTabKey(e, i)}
                 className={cn(
-                  "flex min-w-0 flex-col items-start gap-1.5 pr-4 pb-5 text-left transition-colors duration-150",
+                  "flex min-w-0 flex-col items-start gap-1.5 border-b border-line pr-4 pb-5 text-left transition-colors duration-150",
                   selected ? "text-white" : "text-gris-texto hover:text-white"
                 )}
               >
@@ -136,7 +141,7 @@ export function Portfolio() {
           <span
             ref={markRef}
             aria-hidden="true"
-            className="absolute -bottom-px left-0 h-0.5 w-px origin-left bg-ultramar opacity-0 transition-transform duration-300 ease-in-out motion-reduce:transition-none"
+            className="absolute top-0 left-0 h-0.5 w-px origin-left bg-ultramar opacity-0 transition-transform duration-300 ease-in-out motion-reduce:transition-none"
           />
         </div>
       </div>
@@ -187,17 +192,21 @@ export function Portfolio() {
               >
                 <ArrowRight />
               </Button>
-              <a
-                href={project.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="type-crumb ml-3 inline-flex items-center gap-1.5 rounded-sm py-2 text-label transition-colors duration-150 hover:text-white"
-              >
-                Ver {project.host}
-                <ArrowUpRight className="size-4" aria-hidden="true" />
-              </a>
+              {/* Un panel privado no se enlaza: la página no anuncia la entrada a un sistema interno. */}
+              {project.url ? (
+                <a
+                  href={project.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="type-crumb ml-3 inline-flex items-center gap-1.5 rounded-sm py-2 text-label transition-colors duration-150 hover:text-white"
+                >
+                  Ver {project.host}
+                  <ArrowUpRight className="size-4" aria-hidden="true" />
+                </a>
+              ) : null}
             </div>
           </div>
+          {project.note ? <p className="type-crumb mt-4 text-gris-texto">{project.note}</p> : null}
 
           <dl className="reveal mt-14 grid gap-10 md:mt-20 md:grid-cols-3 md:gap-12">
             {[

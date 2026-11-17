@@ -11,9 +11,20 @@ npm install
 npm run dev
 ```
 
-Abre http://localhost:3000. Para producción: `npm run build` y `npm start`.
+Abre http://localhost:3000.
 
-Antes de publicar, define `NEXT_PUBLIC_SITE_URL` con el dominio (por ejemplo `https://tudominio.com`). Sin eso, la vista previa del enlace en WhatsApp y redes no encuentra su imagen.
+La página se exporta como sitio estático (`output: "export"`): `npm run build` deja todo en `out/`, y `npm start` lo sirve en http://localhost:4173 para mirarlo tal como quedará publicado.
+
+## Publicarla en GitHub Pages
+
+Se publica sola en https://sergiodotbaquero-byte.github.io/METAHOME/ cada vez que se sube algo a `main`. Lo hace la Action `.github/workflows/pages.yml`, que también se puede correr a mano desde la pestaña Actions.
+
+Una sola vez, en el repositorio: **Settings → Pages → Build and deployment → Source: «GitHub Actions»**. Con «Deploy from a branch», GitHub publicaría el README con Jekyll en vez de la página; por eso no hace falta un `_config.yml`. El título y la descripción salen de la propia página (`lib/site.ts`).
+
+- La página vive bajo `/METAHOME`. La Action pasa esa ruta en `NEXT_PUBLIC_BASE_PATH`, y Next la agrega a sus enlaces, estilos y scripts. Una imagen de `public/` en un `<img>` propio la necesita también: escríbela con `asset("/work/…")` (`lib/utils.ts`).
+- La Action también define `NEXT_PUBLIC_SITE_URL` con el dominio, para que la vista previa del enlace en WhatsApp y redes encuentre su imagen. En otro hosting, defínela tú (por ejemplo `https://tudominio.com`).
+- Para ver en local la versión con la ruta base: `NEXT_PUBLIC_BASE_PATH=/METAHOME npm run build` y después `NEXT_PUBLIC_BASE_PATH=/METAHOME npm start`, en http://localhost:4173/METAHOME/. En Git Bash, antepón `MSYS_NO_PATHCONV=1` para que no convierta `/METAHOME` en una ruta de Windows.
+- Con un dominio propio, la ruta base queda vacía sola.
 
 ## Dónde se cambia cada cosa
 
@@ -34,18 +45,31 @@ Pendiente: el correo. Mientras `email` sea `null` en `lib/site.ts`, la página m
 
 ## Las capturas
 
-Están en `public/work/`, en dos juegos:
+Hay cuatro proyectos: Faros Training Center, Liceo Los Robles, Sol y Café y ServirPlus. Sus capturas están en `public/work/`, en dos juegos:
 
 - celular (`*-cel-*`), para el túnel: recortadas a 4 : 5, en 400 y 800 px;
 - escritorio, para la baraja: en 2,06 : 1, en 640, 1080 y 1600 px.
 
-Para volver a tomarlas:
+Para volver a tomarlas, todas o solo algunas (`faros`, `robles`, `sol`, `servir`):
 
 ```bash
 npm run capturas
 ```
 
+```bash
+npm run capturas -- sol servir
+```
+
 Usa el Edge o el Chrome instalados. Si sumas un proyecto, agrégalo en `scripts/capturar.mjs` y en `lib/work.ts`.
+
+- **Sol y Café** abre el menú con el código de mesa 1001, uno de los códigos de prueba que publica la misma página. Solo mira: nada se agrega ni se pide.
+- **ServirPlus**: sin sesión, solo se captura la pantalla de acceso. El panel está detrás del inicio de sesión y tiene datos de candidatos reales, así que va aparte:
+
+```bash
+npm run capturas -- servir-panel
+```
+
+Abre una ventana visible del navegador. Una persona inicia sesión ahí, a mano: el script nunca escribe, lee ni guarda la contraseña. Ya adentro recorre Panel, Candidatos, WhatsApp, Vacantes, Uso IA y Consola. Antes de cada captura difumina en la página todo lo que no es de la interfaz: nombres, teléfonos, cédulas, correos, mensajes y fotos. La sesión vive en un perfil temporal que se borra al cerrar la ventana. Revisa las capturas antes de publicarlas. En la página, ServirPlus no enlaza al panel (es privado) y lleva la nota «Los datos de los candidatos aparecen difuminados».
 
 ## Los dos componentes
 

@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start",
+    "start": "node scripts/vista-previa.mjs",
     "lint": "eslint",
     "capturas": "node scripts/capturar.mjs"
   },

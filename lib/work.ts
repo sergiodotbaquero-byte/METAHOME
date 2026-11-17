@@ -1,4 +1,5 @@
 import type { TumbleCard } from "@/components/ui/tumble-deck-showcase"
+import { asset } from "@/lib/utils"
 
 // Proyectos y capturas, en public/work/:
 // - de escritorio, para la baraja de Trabajo: 640, 1080 y 1600 px, en 2,06 : 1;
@@ -16,11 +17,15 @@ export type Project = {
   name: string
   /** Nombre corto, para las etiquetas de las tarjetas. */
   short: string
-  url: string
+  /** Sin url, la página no enlaza el proyecto (un panel privado, por ejemplo). */
+  url?: string
+  /** El dominio, o qué es cuando no hay enlace. */
   host: string
   client: string
   built: string
   solves: string
+  /** Una aclaración bajo la baraja. */
+  note?: string
   shots: Shot[]
 }
 
@@ -64,14 +69,50 @@ export const projects: Project[] = [
       { file: "robles-ubicacion", view: "Ubicación" },
     ],
   },
+  {
+    id: "sol-y-cafe",
+    name: "Sol y Café",
+    short: "sol y café",
+    url: "https://foodsistem.web.app/",
+    host: "foodsistem.web.app",
+    client: "Sol y Café. Espresso y métodos de filtrado.",
+    built: "Menú digital por mesa: cada mesa entra con su código y arma su pedido desde el celular.",
+    solves: "El cliente ve fotos, ingredientes y precios sin esperar la carta, y pide desde su mesa.",
+    shots: [
+      { file: "sol-menu", view: "Menú" },
+      { file: "sol-favoritos", view: "Favoritos" },
+      { file: "sol-detalle", view: "Detalle de un producto" },
+      { file: "sol-con-leche", view: "Con leche" },
+      { file: "sol-inicio", view: "Código de la mesa" },
+    ],
+  },
+  {
+    id: "servirplus",
+    name: "ServirPlus",
+    short: "servirplus",
+    host: "panel privado",
+    client: "ServirPlus. Centro de selección de personal.",
+    built: "Un asistente de WhatsApp con IA que filtra a los candidatos por vacante, y el panel donde el equipo los sigue.",
+    solves: "El equipo sigue a cada candidato, de la hoja de vida al ingreso, sin perder conversaciones en WhatsApp.",
+    note: "Los datos de los candidatos aparecen difuminados.",
+    shots: [
+      { file: "servir-panel", view: "Panel" },
+      { file: "servir-candidatos", view: "Directorio de candidatos" },
+      { file: "servir-whatsapp", view: "WhatsApp" },
+      { file: "servir-vacantes", view: "Vacantes" },
+      { file: "servir-ia", view: "Uso de IA" },
+      { file: "servir-consola", view: "Consola" },
+      { file: "servir-acceso", view: "Acceso" },
+    ],
+  },
 ]
 
 const WIDTHS = [640, 1080, 1600]
 
 export function cardFor(project: Project, shot: Shot): TumbleCard {
   return {
-    src: `/work/${shot.file}-1080.webp`,
-    srcSet: WIDTHS.map((w) => `/work/${shot.file}-${w}.webp ${w}w`).join(", "),
+    src: asset(`/work/${shot.file}-1080.webp`),
+    srcSet: WIDTHS.map((w) => `${asset(`/work/${shot.file}-${w}.webp`)} ${w}w`).join(", "),
     alt: `${project.name}: ${shot.view.toLowerCase()}`,
   }
 }
@@ -90,20 +131,20 @@ export type TunnelShot = {
   alt: string
 }
 
-/** El túnel del inicio: los dos sitios en el celular, alternados. [proyecto, archivo, vista] */
+/** El túnel del inicio: los cuatro proyectos en el celular, alternados, tres de cada uno. [proyecto, archivo, vista] */
 const tunnelPicks: [projectId: string, file: string, view: string][] = [
   ["faros-training-center", "faros-cel-inicio", "inicio"],
   ["liceo-los-robles", "robles-cel-inicio", "inicio"],
+  ["sol-y-cafe", "sol-cel-menu", "menú"],
+  ["servirplus", "servir-cel-ia", "uso de ia"],
   ["faros-training-center", "faros-cel-app-planes", "arma tu plan"],
   ["liceo-los-robles", "robles-cel-menu", "menú escolar"],
+  ["sol-y-cafe", "sol-cel-detalle", "capuchino"],
+  ["servirplus", "servir-cel-whatsapp", "whatsapp"],
   ["faros-training-center", "faros-cel-media", "publicaciones"],
-  ["liceo-los-robles", "robles-cel-momentos", "momentos"],
-  ["faros-training-center", "faros-cel-login", "acceso"],
   ["liceo-los-robles", "robles-cel-plataforma", "plataforma"],
-  ["faros-training-center", "faros-cel-planes", "inscripción"],
-  ["liceo-los-robles", "robles-cel-historia", "historia"],
-  ["faros-training-center", "faros-cel-opiniones", "opiniones"],
-  ["liceo-los-robles", "robles-cel-ubicacion", "ubicación"],
+  ["sol-y-cafe", "sol-cel-favoritos", "favoritos"],
+  ["servirplus", "servir-cel-vacantes", "vacantes"],
 ]
 
 export const heroTunnel: TunnelShot[] = tunnelPicks.map(([projectId, file, view]) => {
@@ -112,8 +153,8 @@ export const heroTunnel: TunnelShot[] = tunnelPicks.map(([projectId, file, view]
     projectId,
     short: project.short,
     view,
-    src: `/work/${file}-800.webp`,
-    srcSet: `/work/${file}-400.webp 400w, /work/${file}-800.webp 800w`,
+    src: asset(`/work/${file}-800.webp`),
+    srcSet: `${asset(`/work/${file}-400.webp`)} 400w, ${asset(`/work/${file}-800.webp`)} 800w`,
     alt: `${project.name} en el celular: ${view}`,
   }
 })
