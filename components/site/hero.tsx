@@ -76,6 +76,8 @@ export function Hero() {
       className="bg-fondo"
       background={
         <>
+          {/* La luz que entra por la esquina (globals.css, .luz): se queda arriba, con el título. */}
+          <div aria-hidden="true" className="luz pointer-events-none absolute inset-0" />
           {/* La trama, solo hacia los bordes: nunca debajo del nombre. */}
           <div
             aria-hidden="true"
@@ -84,7 +86,7 @@ export function Hero() {
           {/* Un poco de Ultramar al fondo del túnel. */}
           <div
             aria-hidden="true"
-            className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_center,rgb(65_104_255/0.15)_0%,transparent_62%)]"
+            className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_center,rgb(65_104_255/0.11)_0%,transparent_62%)]"
           />
         </>
       }

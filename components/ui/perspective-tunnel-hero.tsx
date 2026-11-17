@@ -21,11 +21,15 @@ import {
  * visitor scrolls. Each card has its own stretch of the flight (staggered),
  * comes in from far away, passes and fades.
  *
+ * The anchor grows from the first scroll on, as the tunnel carries the visitor
+ * toward it, and is flown through at the end.
+ *
  * Every card flies its own lane, and the lanes are laid out from the anchor's
- * measured box: a card shows up just clear of the anchor and perspective only
- * carries it outward from there, so the cards ring the anchor and never pile
- * up over it. Directions where a card would hardly be seen (the ends of a wide
- * title on a phone) are left empty.
+ * measured box: a card shows up just clear of the anchor — as big as the
+ * anchor will get while the card lingers by it — and perspective only carries
+ * it outward from there, so the cards ring the anchor and never pile up over
+ * it. Directions where a card would hardly be seen (the ends of a wide title
+ * on a phone) are left empty.
  *
  * Integrated into METALEVEL code from the original wheel-driven version: here
  * the PAGE scroll flies the tunnel. The hero is a tall track with a stage
@@ -98,8 +102,12 @@ type Box = { x: number; y: number }
 
 const SPRING_CONFIG = { stiffness: 60, damping: 25, mass: 0.5 }
 
-/** The anchor's scale through most of the flight (it is flown through at the end). */
-const ANCHOR_MID_SCALE = 1.05
+/**
+ * How the anchor grows along the flight: steadily from the first scroll up to
+ * `cruise` (reaching `cruiseScale`), then faster and faster until `endScale`,
+ * as it is flown through. The speed carries over at `cruise`: no jolt.
+ */
+const ANCHOR_GROWTH = { cruise: 0.75, cruiseScale: 1.25, endScale: 1.7 }
 const CARD_RATIO = 5 / 4 // portrait 4 : 5
 /** Share of the whole flight each card spends in the air. */
 const STAGGER_SPAN = 0.55
@@ -114,6 +122,8 @@ const FIRST_DIRECTION = { cos: 0.64, sin: -0.77 }
 const GOLDEN = 0.6180339887
 /** Lanes don't all start right at the anchor, so the ring isn't a single line. */
 const SPREAD = [1, 1.16, 1.06, 1.24, 1.1, 1.2]
+/** Moments of a card's flight checked against the growing anchor. */
+const KEEP_SAMPLES = 48
 
 type Direction = { cos: number; sin: number }
 
@@ -146,6 +156,19 @@ function onRing(d: number, rx: number, ry: number) {
  */
 const depthAt = (t: number, farZ: number, nearZ: number) => farZ + (nearZ - farZ) * t * t
 
+/** The anchor's scale at a point of the flight (0 → 1). See ANCHOR_GROWTH. */
+function anchorScaleAt(p: number) {
+  const { cruise, cruiseScale, endScale } = ANCHOR_GROWTH
+  const q = clamp(p, 0, 1)
+  const rate = (cruiseScale - 1) / cruise
+  if (q <= cruise) return 1 + rate * q
+  const d = q - cruise
+  const rest = 1 - cruise
+  // Same speed as before `cruise`, plus a steady acceleration that lands on endScale at the end.
+  const accel = (endScale - cruiseScale - rate * rest) / (rest * rest)
+  return cruiseScale + rate * d + accel * d * d
+}
+
 /** Depth of the flight and size of the cards. Phones get a shorter tunnel. */
 function rig({ width, isMobile }: StageDimensions) {
   return isMobile
@@ -164,11 +187,12 @@ function layout(items: TunnelItem[]): TunnelCardData[] {
 
 /**
  * Lays the lanes out around the anchor. A card shows up at the scale of the
- * far end of the tunnel, on a ring just clear of the anchor (at its mid-flight
- * size, plus some air and the pointer's drift); from there perspective only
- * carries it outward, so it never crosses the anchor. The cards are spread
- * evenly along the ring, not by angle, so a wide title gets cards along its
- * whole length instead of a clump over its middle.
+ * far end of the tunnel, on a ring just clear of the anchor (as big as the
+ * anchor gets while the card lingers by it, plus some air and the pointer's
+ * drift); from there perspective only carries it outward, so it never crosses
+ * the anchor. Cards that fly later meet a bigger anchor, so their ring is
+ * wider. The cards are spread evenly along the ring, not by angle, so a wide
+ * title gets cards along its whole length instead of a clump over its middle.
  */
 function planLanes(cards: TunnelCardData[], stage: StageDimensions): Lane[] {
   const { perspective, farZ, nearZ, cardWidth, pan, air } = rig(stage)
@@ -176,9 +200,25 @@ function planLanes(cards: TunnelCardData[], stage: StageDimensions): Lane[] {
   const appear = perspective / (perspective - farZ) // a card's scale when it shows up
   const halfW = stage.width / 2
   const halfH = stage.height / 2
-  const margin = air + pan * appear
-  const keepX = (stage.anchorWidth / 2) * ANCHOR_MID_SCALE + margin
-  const keepY = (stage.anchorHeight / 2) * ANCHOR_MID_SCALE + margin
+  const anchorHalf: Box = { x: stage.anchorWidth / 2, y: stage.anchorHeight / 2 }
+  const scaleAt = (t: number) => perspective / (perspective - depthAt(t, farZ, nearZ))
+
+  // The room a card leaves around the anchor when it shows up. The anchor keeps
+  // growing while the card lingers by it, so take the tightest moment of the
+  // card's flight, brought back to the scale the card shows up at.
+  const keepFor = (index: number): Box => {
+    const start = (index / cards.length) * (1 - STAGGER_SPAN)
+    let x = 0
+    let y = 0
+    for (let k = 0; k <= KEEP_SAMPLES; k++) {
+      const t = k / KEEP_SAMPLES
+      const grown = anchorScaleAt(start + t * STAGGER_SPAN)
+      const back = appear / scaleAt(t)
+      x = Math.max(x, (anchorHalf.x * grown + air) * back)
+      y = Math.max(y, (anchorHalf.y * grown + air) * back)
+    }
+    return { x: x + pan * appear, y: y + pan * appear }
+  }
 
   // Half the box of a card tilted by `deg`.
   const box = (deg: number): Box => {
@@ -188,10 +228,10 @@ function planLanes(cards: TunnelCardData[], stage: StageDimensions): Lane[] {
     return { x: (cardWidth * c + cardHeight * s) / 2, y: (cardWidth * s + cardHeight * c) / 2 }
   }
   // How far out along a direction, on screen, a card shows up: just clear of the anchor.
-  const startAt = (cos: number, sin: number, half: Box) =>
+  const startAt = (cos: number, sin: number, half: Box, keep: Box) =>
     Math.min(
-      cos !== 0 ? (keepX + appear * half.x) / Math.abs(cos) : Infinity,
-      sin !== 0 ? (keepY + appear * half.y) / Math.abs(sin) : Infinity
+      cos !== 0 ? (keep.x + appear * half.x) / Math.abs(cos) : Infinity,
+      sin !== 0 ? (keep.y + appear * half.y) / Math.abs(sin) : Infinity
     )
   // Share of its flight a card spends on screen: until its inner edge crosses
   // the screen's edge (scale × (lane − half card) > half screen).
@@ -204,40 +244,42 @@ function planLanes(cards: TunnelCardData[], stage: StageDimensions): Lane[] {
     return Math.sqrt(clamp((perspective - perspective / scale - farZ) / (nearZ - farZ), 0, 1))
   }
 
-  // The ring where cards show up: the anchor's box grown by half a tilted card.
-  // Walk it in even steps and keep the stretches where a card shows up whole
-  // and stays on screen a while.
   const typical = box(11)
-  const ringX = keepX + appear * typical.x
-  const ringY = keepY + appear * typical.y
-  const all: Direction[] = []
-  const partly: Direction[] = []
-  const whole: Direction[] = []
-  for (let k = 0; k < RING_STEPS; k++) {
-    const { x, y } = onRing(((k + 0.5) / RING_STEPS) * 4 * (ringX + ringY), ringX, ringY)
-    const length = Math.sqrt(x * x + y * y)
-    const direction = { cos: round(x / length, 6), sin: round(y / length, 6) }
-    all.push(direction)
-    if (Math.abs(x) > halfW || Math.abs(y) > halfH) continue
-    partly.push(direction)
-    const fits = Math.abs(x) + appear * typical.x <= halfW - EDGE && Math.abs(y) + appear * typical.y <= halfH - EDGE
-    if (fits && life({ x: x / appear, y: y / appear }, typical) >= MIN_LIFE) whole.push(direction)
-  }
-  // With hardly any room around the anchor (a phone on its side), cards partly in view will do.
-  const open = whole.length >= cards.length * 4 ? whole : partly.length > 0 ? partly : all
-
-  // The golden ratio spreads the cards over the open stretches, so cards that
-  // fly one after another land far apart.
   const towardFirst = (d: Direction) => d.cos * FIRST_DIRECTION.cos + d.sin * FIRST_DIRECTION.sin
-  let first = 0
-  for (let i = 1; i < open.length; i++) {
-    if (towardFirst(open[i]) > towardFirst(open[first])) first = i
-  }
+
   return cards.map((card) => {
+    const keep = keepFor(card.index)
+    // This card's ring: the room around the anchor grown by half a tilted card.
+    // Walk it in even steps and keep the stretches where a card shows up whole
+    // and stays on screen a while.
+    const ringX = keep.x + appear * typical.x
+    const ringY = keep.y + appear * typical.y
+    const all: Direction[] = []
+    const partly: Direction[] = []
+    const whole: Direction[] = []
+    for (let k = 0; k < RING_STEPS; k++) {
+      const { x, y } = onRing(((k + 0.5) / RING_STEPS) * 4 * (ringX + ringY), ringX, ringY)
+      const length = Math.sqrt(x * x + y * y)
+      const direction = { cos: round(x / length, 6), sin: round(y / length, 6) }
+      all.push(direction)
+      if (Math.abs(x) > halfW || Math.abs(y) > halfH) continue
+      partly.push(direction)
+      const fits = Math.abs(x) + appear * typical.x <= halfW - EDGE && Math.abs(y) + appear * typical.y <= halfH - EDGE
+      if (fits && life({ x: x / appear, y: y / appear }, typical) >= MIN_LIFE) whole.push(direction)
+    }
+    // With hardly any room around the anchor (a phone on its side), cards partly in view will do.
+    const open = whole.length >= cards.length * 4 ? whole : partly.length > 0 ? partly : all
+
+    // The golden ratio spreads the cards over the open stretches, so cards that
+    // fly one after another land far apart.
+    let first = 0
+    for (let i = 1; i < open.length; i++) {
+      if (towardFirst(open[i]) > towardFirst(open[first])) first = i
+    }
     const pick = (first / open.length + card.index * GOLDEN) % 1
     const { cos, sin } = open[Math.floor(pick * open.length)]
     const half = box(card.rotationZ)
-    const r = startAt(cos, sin, half)
+    const r = startAt(cos, sin, half, keep)
     // Room to start further out without showing up past the screen's edge.
     const room = Math.min(
       cos !== 0 ? (halfW - EDGE - appear * half.x) / (r * Math.abs(cos)) : Infinity,
@@ -415,8 +457,8 @@ export default function PerspectiveTunnelHero({
 
   const pointer = useCameraParallax(!reduce)
 
-  // The anchor stays crisp through the flight and is flown through at the end.
-  const titleScale = useTransform(anchorProgress, [0, 0.7, 1], [1, ANCHOR_MID_SCALE, 1.32])
+  // The anchor grows from the first scroll on (the tunnel carries you toward it) and is flown through at the end.
+  const titleScale = useTransform(anchorProgress, anchorScaleAt)
   const titleOpacity = useTransform(anchorProgress, [0, 0.8, 0.97], [1, 1, 0])
   const promptOpacity = useTransform(anchorProgress, [0, 0.06], [1, 0])
 

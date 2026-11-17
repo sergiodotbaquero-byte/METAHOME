@@ -134,7 +134,7 @@
     @apply border-border outline-ring/50;
   }
   html {
-    @apply font-sans;
+    @apply bg-background font-sans;
     scroll-behavior: smooth;
     scroll-padding-top: calc(4rem + env(safe-area-inset-top, 0px));
     -webkit-text-size-adjust: 100%;
@@ -142,8 +142,9 @@
     -webkit-tap-highlight-color: transparent;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply text-foreground;
   }
+
   ::selection {
     background: var(--color-ultramar);
     color: #ffffff;
@@ -267,6 +268,62 @@
 }
 
 @layer components {
+  /*
+   * La luz del inicio. Entra por la esquina de arriba a la derecha, en franjas
+   * a 45° —paralelas a la barra y a la trama— con franjas de sombra entre ellas,
+   * y se apaga hacia abajo a la izquierda. Vive en el escenario fijo del túnel:
+   * se queda arriba, con el título, mientras se vuela, y se va con él.
+   * Las medidas van en vmax, centradas en la esquina: es la misma en un celular
+   * vertical y en una pantalla ancha. El grano fino evita los escalones del
+   * degradado oscuro.
+   */
+  .luz {
+    background-image:
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='g' x='0' y='0'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.07 0'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23g)'/%3E%3C/svg%3E"),
+      radial-gradient(circle 62vmax at 100% 0%, rgb(65 104 255 / 0.13), rgb(65 104 255 / 0.04) 55%, transparent 100%),
+      linear-gradient(
+        135deg,
+        transparent 30%,
+        rgb(65 104 255 / 0.09) 36.5%,
+        rgb(65 104 255 / 0.08) 40%,
+        rgb(8 9 12 / 0.24) 42.9%,
+        rgb(65 104 255 / 0.2) 44.4%,
+        rgb(150 170 255 / 0.15) 45.5%,
+        rgb(65 104 255 / 0.18) 46.9%,
+        rgb(8 9 12 / 0.2) 48.6%,
+        rgb(65 104 255 / 0.12) 50.1%,
+        rgb(8 9 12 / 0.16) 52.2%,
+        rgb(8 9 12 / 0.1) 53.8%,
+        rgb(65 104 255 / 0.08) 56%,
+        transparent 60%
+      );
+    /* Las franjas: un cuadrado de 200vmax con su centro en la esquina. */
+    background-size:
+      200px 200px,
+      100% 100%,
+      200vmax 200vmax;
+    background-position:
+      0 0,
+      0 0,
+      right -100vmax top -100vmax;
+    background-repeat: repeat, no-repeat, no-repeat;
+    /* Se apaga lejos de la esquina y antes del borde de abajo, para no dejar un corte al terminar el inicio. */
+    -webkit-mask-image:
+      radial-gradient(circle 118vmax at 100% 0%, #000 0%, rgb(0 0 0 / 0.55) 45%, transparent 100%),
+      linear-gradient(to bottom, #000 55%, transparent 100%);
+    -webkit-mask-composite: source-in;
+    mask-image:
+      radial-gradient(circle 118vmax at 100% 0%, #000 0%, rgb(0 0 0 / 0.55) 45%, transparent 100%),
+      linear-gradient(to bottom, #000 55%, transparent 100%);
+    mask-composite: intersect;
+    animation: luz-entra 2.4s cubic-bezier(0.23, 1, 0.32, 1) 0.2s both;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .luz {
+      animation: aparecer-suave 1s ease both;
+    }
+  }
+
   /* La barra superior: transparente sobre el inicio; después, un material translúcido. */
   .site-header {
     transition:
@@ -422,6 +479,13 @@
 @keyframes trazar {
   from {
     scale: 0 1;
+  }
+}
+/* La luz se enciende una vez, al llegar: aparece y se desliza un poco hacia adentro, desde su esquina. */
+@keyframes luz-entra {
+  from {
+    opacity: 0;
+    translate: 3vmax -3vmax;
   }
 }
 @supports (animation-timeline: view()) {

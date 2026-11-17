@@ -22,6 +22,7 @@ Antes de publicar, define `NEXT_PUBLIC_SITE_URL` con el dominio (por ejemplo `ht
 | WhatsApp, correo, ciudad, fundadores | `lib/site.ts` |
 | Proyectos, textos y capturas (las del túnel y las de la baraja) | `lib/work.ts` |
 | Colores, escala tipográfica, la trama, el movimiento ligado al scroll | `app/globals.css` |
+| La luz del inicio | `.luz` en `app/globals.css`; se pone en `components/site/hero.tsx` |
 | Secciones | `components/site/` |
 | La escalera del proceso | `components/site/process.tsx`, `escalera.tsx` y `.escalera` en `app/globals.css` |
 | Logo (símbolo Ruta 4 «Giro» y nombre) | `components/brand/logo.tsx` |
@@ -48,13 +49,22 @@ Usa el Edge o el Chrome instalados. Si sumas un proyecto, agrégalo en `scripts/
 
 ## Los dos componentes
 
-**El túnel** (`perspective-tunnel-hero.tsx`). Las tarjetas salen del fondo alrededor del nombre y pasan de largo. Nunca lo tapan: el componente mide el bloque del nombre y traza el carril de cada tarjeta para que aparezca justo por fuera y desde ahí solo se aleje; si el nombre cambia de tamaño, los carriles se rehacen solos. Lo mueve el scroll de la página: el inicio es una pista alta con el escenario fijo en pantalla (`travel` pantallas de recorrido), así que funciona con rueda, trackpad, dedo, teclado y barra de desplazamiento, y al terminar la página sigue. Con movimiento reducido, el túnel queda quieto. Un clic en una tarjeta lleva a su proyecto en Trabajo.
+**El túnel** (`perspective-tunnel-hero.tsx`). Las tarjetas salen del fondo alrededor del nombre y pasan de largo. El nombre se acerca desde el primer scroll: crece parejo hasta 1,25 veces su tamaño (`ANCHOR_GROWTH`) y al final acelera hasta atravesarse. Las tarjetas nunca lo tapan: el componente mide el bloque del nombre y traza el carril de cada tarjeta para que aparezca justo por fuera del tamaño que el nombre alcanza mientras ella está cerca, y desde ahí solo se aleje. Las que salen tarde encuentran un nombre más grande y aparecen más afuera. Si el nombre cambia de tamaño, los carriles se rehacen solos. Lo mueve el scroll de la página: el inicio es una pista alta con el escenario fijo en pantalla (`travel` pantallas de recorrido), así que funciona con rueda, trackpad, dedo, teclado y barra de desplazamiento, y al terminar la página sigue. Con movimiento reducido, el túnel queda quieto. Un clic en una tarjeta lleva a su proyecto en Trabajo.
 
 **La baraja** (`tumble-deck-showcase.tsx`). Es el Tumble Deck Showcase, con tres modos de entrada:
 
 - `capture`: el original. La rueda y el arrastre vertical pasan las cartas, y la página no baja mientras el puntero está encima.
 - `inline`: el que usa Trabajo. Arriba y abajo sigue siendo scroll; las cartas se pasan de lado, con clic, con flechas o con `handleRef.step()`.
 - `external`: sin entrada propia; la mueve `handleRef`.
+
+## La luz del inicio
+
+En el inicio entra una luz por la esquina de arriba a la derecha. Viene en franjas de Ultramar a 45°, paralelas a la barra y a la trama, con franjas de sombra entre ellas, y se apaga hacia abajo a la izquierda. Lleva un grano fino, que además evita los escalones en el degradado oscuro.
+
+- Vive en el escenario fijo del túnel: se queda arriba, con el título, mientras se vuela, y se va con él. El resto de la página no la tiene.
+- Se apaga antes del borde de abajo del inicio, así que no deja un corte al pasar a La idea.
+- Las medidas van en `vmax`, centradas en la esquina, así que se ve igual en un celular vertical que en una pantalla ancha.
+- Se enciende una vez al cargar. Con movimiento reducido solo aparece, sin desplazarse.
 
 ## El movimiento
 
