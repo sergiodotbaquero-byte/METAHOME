@@ -1,0 +1,449 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * METALEVEL code — sistema visual (Propuesta de marca V1, noviembre de 2026).
+ * 60 · 30 · 10: Negro Metalizado, Gris Niebla, Azul Ultramar.
+ * Dos familias y ninguna más: Jost y JetBrains Mono.
+ *
+ * La página vive un nivel por debajo del Negro Metalizado: el fondo es el
+ * Nivel −1 de la marca, el código y el pie bajan al Nivel −2, y el Negro
+ * Metalizado queda para lo que sube (paneles, tarjetas). Más oscura, sin
+ * salirse de la paleta.
+ */
+@theme {
+  --color-hondo: #131519; /* Nivel −2 · código, pie, escenario de la baraja */
+  --color-fondo: #1b1e24; /* Nivel −1 · el fondo de la página */
+  --color-negro: #2a2e36; /* Negro Metalizado · paneles y tarjetas */
+  --color-nivel-mas: #353a44; /* Nivel +1 · lo más alto: la trama sobre un panel */
+  --color-niebla: #d9dce1; /* Gris Niebla · el texto */
+  --color-niebla-clara: #eef0f3; /* texto principal */
+  --color-gris-texto: #a7aeba; /* texto secundario */
+  --color-gris-tenue: #868d9a; /* rutas y números de línea; nunca sobre un panel */
+  --color-ultramar: #4168ff; /* Azul Ultramar · acento 10 % */
+  --color-ultramar-claro: #8ca2ff; /* texto y enlaces sobre fondo oscuro */
+
+  /* Curvas: salida fuerte para lo que responde; entrada y salida para lo que se desplaza en pantalla. */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+}
+
+@theme inline {
+  --font-sans: var(--font-jost), ui-sans-serif, system-ui, sans-serif;
+  --font-heading: var(--font-jost), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains), ui-monospace, "Cascadia Mono", monospace;
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-heading: var(--heading);
+  --color-body: var(--body);
+  --color-label: var(--label);
+  --color-line: var(--line);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+/* Un solo tema, oscuro. */
+:root,
+.dark {
+  --background: #1b1e24;
+  --foreground: #eef0f3;
+  --heading: #ffffff;
+  --body: #d9dce1;
+  --label: #8ca2ff;
+  --line: rgb(217 220 225 / 0.12);
+  --card: #2a2e36;
+  --card-foreground: #eef0f3;
+  --popover: #2a2e36;
+  --popover-foreground: #eef0f3;
+  --primary: #4168ff;
+  --primary-foreground: #ffffff;
+  --secondary: #d9dce1;
+  --secondary-foreground: #1b1e24;
+  --muted: #2a2e36;
+  --muted-foreground: #a7aeba;
+  --accent: #2a2e36;
+  --accent-foreground: #ffffff;
+  --destructive: #ff7a7a;
+  --border: rgb(217 220 225 / 0.12);
+  --input: rgb(217 220 225 / 0.18);
+  --ring: #8ca2ff;
+  --chart-1: #4168ff;
+  --chart-2: #8ca2ff;
+  --chart-3: #2a44d4;
+  --chart-4: #a7aeba;
+  --chart-5: #d9dce1;
+  --radius: 0.25rem;
+  --sidebar: #131519;
+  --sidebar-foreground: #eef0f3;
+  --sidebar-primary: #4168ff;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #2a2e36;
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: rgb(217 220 225 / 0.12);
+  --sidebar-ring: #8ca2ff;
+
+  /* Los usa la baraja (components/ui/tumble-deck-showcase.tsx) en su CSS propio. */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-primary: var(--primary);
+
+  color-scheme: dark;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    @apply font-sans;
+    scroll-behavior: smooth;
+    scroll-padding-top: calc(4rem + env(safe-area-inset-top, 0px));
+    -webkit-text-size-adjust: 100%;
+    /* Sin el destello gris del navegador al tocar: cada control da su propia respuesta. */
+    -webkit-tap-highlight-color: transparent;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  ::selection {
+    background: var(--color-ultramar);
+    color: #ffffff;
+  }
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+  /* En el celular: el toque responde sin esperar un doble toque. */
+  a,
+  button,
+  [role="button"],
+  [role="tab"] {
+    touch-action: manipulation;
+  }
+  /* Mantener el dedo sobre un control no selecciona su texto. El contenido sí se puede copiar. */
+  button,
+  [role="button"],
+  [role="tab"] {
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-ultramar-claro);
+    outline-offset: 3px;
+  }
+  p,
+  li,
+  dd {
+    text-wrap: pretty;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+  }
+}
+
+/* Escala tipográfica de la marca, adaptada a pantalla. El espaciado entre letras depende del tamaño: los grandes se cierran. */
+@utility type-display {
+  /* Jost Light 300 · 72 / 76 */
+  font-weight: 300;
+  font-size: clamp(2.5rem, 1.6rem + 3.6vw, 4.5rem);
+  line-height: 1.06;
+  letter-spacing: -0.02em;
+}
+@utility type-statement {
+  /* Una sola frase, al tamaño de una pieza de marca. */
+  font-weight: 300;
+  font-size: clamp(2.6rem, 1.1rem + 5.6vw, 6.5rem);
+  line-height: 1.02;
+  letter-spacing: -0.025em;
+}
+@utility type-title {
+  /* Jost Regular 400 · 44 / 50 */
+  font-weight: 400;
+  font-size: clamp(1.875rem, 1.3rem + 2.2vw, 2.75rem);
+  line-height: 1.14;
+  letter-spacing: -0.012em;
+}
+@utility type-subtitle {
+  /* Jost Medium 500 · 26 / 34 */
+  font-weight: 500;
+  font-size: clamp(1.25rem, 1.05rem + 0.8vw, 1.625rem);
+  line-height: 1.31;
+  letter-spacing: -0.004em;
+}
+@utility type-body {
+  /* Jost Regular 400 · 18 / 30 */
+  font-weight: 400;
+  font-size: 1.0625rem;
+  line-height: 1.7;
+  @media (width >= 48rem) {
+    font-size: 1.125rem;
+    line-height: 1.667;
+  }
+}
+@utility type-label {
+  /* JetBrains Mono 500 · 13 / 20, en mayúsculas y espaciada */
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: 0.8125rem;
+  line-height: 1.25rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+@utility type-crumb {
+  /* La ruta: metalevel / trabajo / proyecto */
+  font-family: var(--font-mono);
+  font-weight: 400;
+  font-size: 0.8125rem;
+  line-height: 1.25rem;
+  letter-spacing: 0.02em;
+}
+
+/* Contenedor con los márgenes generosos de las piezas de marca. En un celular acostado, el contenido no se mete bajo la muesca. */
+@utility shell {
+  width: 100%;
+  max-width: 88rem;
+  margin-inline: auto;
+  padding-left: max(1rem, env(safe-area-inset-left, 0px));
+  padding-right: max(1rem, env(safe-area-inset-right, 0px));
+  @media (width >= 40rem) {
+    padding-left: max(2rem, env(safe-area-inset-left, 0px));
+    padding-right: max(2rem, env(safe-area-inset-right, 0px));
+  }
+  @media (width >= 64rem) {
+    padding-left: max(4.5rem, env(safe-area-inset-left, 0px));
+    padding-right: max(4.5rem, env(safe-area-inset-right, 0px));
+  }
+}
+
+/* La trama: líneas a 45° cada 24 px, un tono por encima del fondo. Nunca debajo de un texto. */
+@utility trama {
+  background-image: repeating-linear-gradient(
+    135deg,
+    var(--trama-color, var(--color-negro)) 0 1px,
+    transparent 1px 24px
+  );
+}
+
+@layer components {
+  /* La barra superior: transparente sobre el inicio; después, un material translúcido. */
+  .site-header {
+    transition:
+      background-color 0.2s ease,
+      box-shadow 0.2s ease;
+  }
+  .site-header .header-name {
+    opacity: var(--hero-pass, 1);
+  }
+  /* Pasado el inicio, el nombre siempre está (con movimiento reducido el METALEVEL del túnel no se atraviesa). */
+  [data-hero="past"] .site-header .header-name {
+    opacity: 1;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .site-header .header-name {
+      transition: opacity 0.2s ease;
+    }
+  }
+  [data-hero="past"] .site-header {
+    background-color: rgb(27 30 36 / 0.95);
+    box-shadow: 0 1px 0 rgb(217 220 225 / 0.08);
+  }
+  @supports ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+    [data-hero="past"] .site-header {
+      background-color: rgb(27 30 36 / 0.74);
+      -webkit-backdrop-filter: blur(16px) saturate(140%);
+      backdrop-filter: blur(16px) saturate(140%);
+    }
+  }
+  @media (prefers-reduced-transparency: reduce) {
+    [data-hero="past"] .site-header {
+      background-color: rgb(27 30 36);
+      -webkit-backdrop-filter: none;
+      backdrop-filter: none;
+    }
+  }
+
+  /*
+   * El proceso como escalera: cada nivel cuelga de su línea, y las líneas se
+   * unen con contrahuellas a 45°, hacia arriba a la derecha, como la barra.
+   * La última termina en la barra, en Ultramar.
+   */
+  .escalera {
+    --paso: 4.5rem;
+  }
+  .escalera .trazo,
+  .escalera .contrahuella,
+  .escalera .barra-final {
+    transform-origin: 0 50%;
+  }
+  .escalera .contrahuella,
+  .escalera .barra-final {
+    display: none;
+  }
+  @media (width >= 64rem) {
+    .escalera > li {
+      padding-top: calc(var(--paso) * var(--sube, 0));
+    }
+    .escalera > li:not(:last-child) .escalon {
+      margin-right: calc(var(--paso) - 2.5rem);
+    }
+    .escalera .contrahuella {
+      display: block;
+      position: absolute;
+      left: calc(var(--paso) * -1);
+      top: var(--paso);
+      width: calc(var(--paso) * 1.41421);
+      height: 1px;
+      rotate: -45deg;
+    }
+    .escalera .barra-final {
+      display: block;
+      position: absolute;
+      left: 100%;
+      top: -0.5px;
+      width: calc(var(--paso) * 0.75);
+      height: 2px;
+      border-radius: 1px;
+      rotate: -45deg;
+    }
+  }
+
+  /* Se dibuja una vez, al llegar a la vista. Sin JavaScript o con movimiento reducido, ya está dibujada. */
+  .escalera[data-estado="espera"] :is(.trazo, .contrahuella, .barra-final) {
+    scale: 0 1;
+  }
+  .escalera[data-estado="espera"] .contenido {
+    opacity: 0;
+    translate: 0 0.75rem;
+  }
+  .escalera[data-estado="sube"] :is(.trazo, .contrahuella) {
+    transition: scale var(--dura, 0.4s) linear var(--espera, 0s);
+  }
+  .escalera[data-estado="sube"] .barra-final {
+    transition: scale 0.3s cubic-bezier(0.23, 1, 0.32, 1) var(--espera, 0s);
+  }
+  .escalera[data-estado="sube"] .contenido {
+    transition:
+      opacity 0.5s ease var(--espera, 0s),
+      translate 0.6s cubic-bezier(0.23, 1, 0.32, 1) var(--espera, 0s);
+  }
+  .escalera > li:nth-child(1) .trazo {
+    --dura: 0.42s;
+  }
+  .escalera > li:nth-child(1) .contenido {
+    --espera: 0.15s;
+  }
+  .escalera > li:nth-child(2) .contrahuella {
+    --dura: 0.14s;
+    --espera: 0.42s;
+  }
+  .escalera > li:nth-child(2) .trazo {
+    --dura: 0.42s;
+    --espera: 0.56s;
+  }
+  .escalera > li:nth-child(2) .contenido {
+    --espera: 0.6s;
+  }
+  .escalera > li:nth-child(3) .contrahuella {
+    --dura: 0.14s;
+    --espera: 0.98s;
+  }
+  .escalera > li:nth-child(3) .trazo {
+    --dura: 0.42s;
+    --espera: 1.12s;
+  }
+  .escalera > li:nth-child(3) .contenido {
+    --espera: 1.15s;
+  }
+  .escalera .barra-final {
+    --espera: 1.54s;
+  }
+}
+
+/*
+ * Movimiento ligado al scroll: los títulos y los bloques suben un poco y
+ * aparecen mientras entran en pantalla, al ritmo de la mano. Sin JavaScript y
+ * fuera del hilo principal; donde el navegador no lo soporta, todo queda
+ * quieto y visible. Ojo: un .reveal no puede estar dentro de un contenedor
+ * con overflow hidden o auto (ese sería su línea de tiempo): ahí, overflow clip.
+ */
+@keyframes aparecer {
+  from {
+    opacity: 0;
+    translate: 0 1.5rem;
+  }
+}
+@keyframes aparecer-suave {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes trazar {
+  from {
+    scale: 0 1;
+  }
+}
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .reveal {
+      animation: aparecer auto cubic-bezier(0.23, 1, 0.32, 1) both;
+      animation-timeline: view();
+      animation-range: entry 10% cover 30%;
+    }
+    .linea-seccion {
+      transform-origin: 0 50%;
+      animation: trazar auto cubic-bezier(0.23, 1, 0.32, 1) both;
+      animation-timeline: view();
+      animation-range: entry 0% cover 35%;
+    }
+  }
+  /* Con movimiento reducido, nada se desplaza: solo aparece. */
+  @media (prefers-reduced-motion: reduce) {
+    .reveal {
+      animation: aparecer-suave auto linear both;
+      animation-timeline: view();
+      animation-range: entry 10% cover 25%;
+    }
+  }
+}
