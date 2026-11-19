@@ -1,34 +1,25 @@
 import { cn } from "@/lib/utils"
 
 /**
- * El símbolo — Ruta 4, «Giro». Una M de ángulos rectos girada 45°: su valle
- * queda convertido en una L (en Ultramar) y sus dos astas, en barras.
- * `small` usa el trazo grueso de la versión para tamaños pequeños.
+ * El símbolo «Nivel»: las dos mitades de una M en niveles distintos (la derecha
+ * va un nivel más arriba), cruzadas por una barra. Retícula de 3 × 3 a 45°,
+ * 1 nivel = 30 unidades, trazo de 1/5 de nivel, puntas redondas.
+ * `small` usa el corte pequeño (trazo más grueso) para 32 px o menos.
+ * Fuente de verdad: el repositorio METABRANDING (codigo/marca.py).
  */
-export function Simbolo({
-  className,
-  small = false,
-  mono = false,
-}: {
-  className?: string
-  small?: boolean
-  /** Todo en el color del texto, para fondos en Ultramar. */
-  mono?: boolean
-}) {
-  const stroke = small ? 9 : 5.5
+export function Simbolo({ className, small = false }: { className?: string; small?: boolean }) {
   return (
-    <svg viewBox="-6 -6 112 112" fill="none" aria-hidden="true" className={className}>
-      <g stroke="currentColor" strokeWidth={stroke} strokeLinecap="round">
-        <path d="M0 54 54 0" />
-        <path d="M100 46 46 100" />
+    <svg
+      viewBox={small ? "-4.8 -4.8 99.6 99.6" : "-3 -3 96 96"}
+      fill="none"
+      aria-hidden="true"
+      className={className}
+    >
+      <g stroke="currentColor" strokeWidth={small ? 9.6 : 6} strokeLinecap="round" strokeLinejoin="round">
+        <path d="M0 0 90 90" />
+        <path d="M0 90V30l30 30" />
+        <path d={small ? "M65.36 24.64 90 0v60" : "M57.73 32.27 90 0v60"} />
       </g>
-      <path
-        d="M54 0v46h46"
-        className={mono ? "stroke-current" : "stroke-ultramar"}
-        strokeWidth={stroke}
-        strokeLinecap="round"
-        strokeLinejoin="miter"
-      />
     </svg>
   )
 }
